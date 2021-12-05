@@ -10,19 +10,15 @@
 
 ;; List packages you want to install
 (setq package-list '(ag
-		     cider
+ 		     cider
 		     company
-		     evil
-		     evil-collection
-		     evil-commentary
-		     evil-escape
-		     evil-leader
 		     fzf
+		     key-chord
 		     magit
+		     meow
 		     rainbow-delimiters
 		     smartparens
 		     typit
-		     undo-fu
 		     xclip))
 
 ;; Package Repos
@@ -42,62 +38,10 @@
   (unless (package-installed-p package)
     (package-install package)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Startup
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defun edit-init-file ()
   "Edit the `user-init-file', in another window."
   (interactive)
   (find-file-other-window user-init-file))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Evil Mode (vim)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(setq evil-undo-system 'undo-fu)
-(setq evil-want-keybinding nil)
-
-(require 'evil)
-(evil-mode t)
-(evil-collection-init)
-(evil-commentary-mode)
-
-(evil-global-set-key 'normal (kbd "TAB") 'evil-jump-item)
-(evil-global-set-key 'visual (kbd "TAB") 'evil-jump-item)
-(evil-global-set-key 'motion (kbd "TAB") 'evil-jump-item)
-(evil-global-set-key 'normal (kbd "C-z") 'suspend-emacs)
-(evil-global-set-key 'normal (kbd "M-h") 'help-command)
-(evil-global-set-key 'normal (kbd "C-j") 'evil-window-down)
-(evil-global-set-key 'normal (kbd "C-k") 'evil-window-up)
-(evil-global-set-key 'normal (kbd "C-h") 'evil-window-left)
-(evil-global-set-key 'normal (kbd "C-l") 'evil-window-right)
-(evil-global-set-key 'normal (kbd "C-]") 'go-forward)
-(evil-global-set-key 'normal (kbd "C-t") 'pop-back)
-
-(require 'evil-leader)
-(global-evil-leader-mode)
-(evil-leader/set-leader "SPC")
-
-(require 'evil-escape)
-(evil-escape-mode 1)
-(setq-default evil-escape-key-sequence "jk")
-
-(evil-leader/set-key
-  "e v" 'edit-init-file
-  "f"   'ag-project
-  "b"   'switch-to-buffer
-  "g s" 'magit-status
-  "g b" 'magit-blame-echo
-  "l"   'switch-to-previous-buffer
-  "o"   'org-cycle
-  "s"   'save-buffer
-  "w x" 'evil-quit
-  "w v" 'evil-window-vsplit
-  "w h" 'evil-window-split
-  "w =" 'balance-windows
-  "v"   'ido-switch-buffer
-  "z"   'fzf-git-files)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Navigation
@@ -121,19 +65,19 @@
   (set-face-background 'mode-line-inactive bg)
   (set-face-foreground 'mode-line-inactive bg)
   (set-face-background 'default bg)
+  ;; (set-face-attribute 'mode-line nil :box nil)
   (set-cursor-color "#f00") 
-  (set-face-attribute 'error nil :foreground "red")
   (set-face-attribute 'mode-line-buffer-id nil :foreground "DeepSkyBlue1")
   (set-face-background 'vertical-border "#222")
-  (set-face-foreground 'vertical-border "#333")) ;"DeepSkyBlue1"))
+  (set-face-foreground 'vertical-border "#333"))
 
 ;; y or n for prompts
 (fset 'yes-or-no-p 'y-or-n-p)
 
+
 ;; Gui
 (tool-bar-mode -1)
 (menu-bar-mode -1)
-;; (toggle-scroll-bar -1) 
 (setq ns-auto-hide-menu-bar t)
 
 ;; No startup banner
@@ -157,7 +101,7 @@
 ;; FS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(setq ag-highlight-search t)
+(setq ag-highlight-search 't)
 (setq ag-reuse-buffers 't)
 (add-hook 'ag-mode-hook #'next-error-follow-minor-mode)
 
@@ -168,7 +112,7 @@
 	 (margin-face . magit-blame-margin)
 	 (margin-body-face magit-blame-dimmed))))
 
-;; SO that customizations aren't loaaded into this file
+;; So that customizations aren't loaaded into this file
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 
 ;; No backup files
@@ -195,87 +139,213 @@
 (setq cider-repl-display-in-current-window t)
 (setq cider-repl-pop-to-buffer-on-connect  nil)
 (setq cider-repl-use-pretty-printing       t)
-(setq cider-save-fileon-load               t)
+(setq cider-save-file-on-load              t)
 (setq cider-show-error-buffer              :only-in-repl)
 (setq cider-test-show-report               nil)
 (setq nrepl-hide-special-buffers           t)
 (setq cider-print-options '(("length" 1500)))
-
-(defun my-cider-debug-setup ()
-  (evil-make-overriding-map cider--debug-mode-map 'normal)
-  (evil-normalize-keymaps))
-
-(defun my-cider-nav-setup ()
-  (evil-make-overriding-map cider-mode-map 'normal)
-  (evil-normalize-keymaps))
-
-(add-hook 'cider--debug-mode-hook 'my-cider-debug-setup 'my-cider-nav-setup)
-
-(defun run-cider-debugger ()
-  "Need to use this to work with evil mode"
-  (interactive)
-  (cider-debug-defun-at-point))
-
-(defun go-forward ()
-  (interactive)
-  (cider-find-var))
-
-(defun pop-back ()
-  (interactive)
-  (cider-pop-back))
 
 (require 'smartparens-config)
 (smartparens-global-mode 1)
 (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
 (show-paren-mode t)
 
-(defun clj-ns-align ()
-  "Align ns requires."
-  (interactive)
-  (end-of-buffer)
-  (when (re-search-backward "^\(ns.*\\(\n.*\\)*\(:require" nil t nil)
-    (mark-sexp)
-    (align-regexp (region-beginning)
-                  (region-end)
-                  "\\(\\s-*\\)\\s-:")))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Meow
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+(defun meow-setup ()
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (meow-motion-overwrite-define-key
+   '("j" . meow-next)
+   '("k" . meow-prev))
+  (meow-leader-define-key
+   ;; SPC j/k will run the original command in MOTION state.
+   '("j" . "H-j")
+   '("k" . "H-k")
+   ;; Use SPC (0-9) for digit arguments.
+   '("1" . meow-digit-argument)
+   '("2" . meow-digit-argument)
+   '("3" . meow-digit-argument)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument) 
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . meow-digit-argument)
+   '("0" . meow-digit-argument)
+   '("/" . meow-keypad-describe-key)
+   '("b" . ido-switch-buffer)
+   '("f" . ag-project)
+   '("l" . switch-to-previous-buffer)
+   '("o" . other-window)
+   '("z" . fzf-find-file)
+   '(";" . comment-line)
+   '("?" . meow-cheatsheet))
+  (meow-normal-define-key
+   '("0" . meow-expand-0)
+   '("9" . meow-expand-9)
+   '("8" . meow-expand-8)
+   '("7" . meow-expand-7)
+   '("6" . meow-expand-6)
+   '("5" . meow-expand-5)
+   '("4" . meow-expand-4)
+   '("3" . meow-expand-3)
+   '("2" . meow-expand-2)
+   '("1" . meow-expand-1)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("[" . meow-beginning-of-thing)
+   '("]" . meow-end-of-thing)
+   '("/" . isearch-forward)
+   '(";" . meow-reverse)
+   '("'" . repeat)
+   '("a" . meow-append)
+   '("A" . meow-open-below)
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("c" . meow-kill)
+   '("e" . meow-find)
+   '("f" . meow-next-word)
+   '("g" . meow-cancel-selection)
+   '("G" . meow-grab)
+   '("h" . meow-left)
+   '("H" . meow-left-expand)
+   '("i" . meow-insert)
+   '("I" . meow-open-above)
+   '("j" . meow-next)
+   '("J" . meow-next-expand)
+   '("k" . meow-prev)
+   '("K" . meow-prev-expand)
+   '("l" . meow-right)
+   '("L" . meow-right-expand)
+   '("n" . meow-search)
+   '("o" . meow-block)
+   '("O" . meow-to-block)
+   '("p" . meow-yank)
+   '("q" . meow-quit)
+   '("Q" . meow-goto-line)
+   '("r" . meow-replace)
+   '("t" . meow-till)
+   '("u" . meow-undo)
+   '("U" . meow-undo-in-selection)
+   '("v" . meow-visit)
+   '("w" . meow-mark-word)
+   '("W" . meow-mark-symbol)
+   '("x" . meow-delete)
+   '("V" . meow-line)
+    '("<escape>" . mode-line-other-buffer)))
 
-(defun clear-repl-buffer ()
-  (interactive)
-  (cider-find-and-clear-repl-output)
-  (cider-switch-to-repl-buffer)
-  (evil-goto-first-line)
-  (cider-switch-to-last-clojure-buffer))
-  
-(defun save-and-reload ()
-  (interactive)
-  (save-buffer)
-  (cider-load-buffer))
+(require 'meow)
+(meow-setup)
+(meow-global-mode 1)
 
-(with-eval-after-load 'evil
-  (evil-leader/set-key-for-mode 'clojure-mode
-    "a"   'clj-ns-align
-    "d"   'cider-doc
-    "e '" 'cider-jack-in
-    "e b" 'save-and-reload
-    "e c" 'cider-connect
-    "e d" 'run-cider-debugger
-    "e e" 'cider-eval-last-sexp
-    "e i" 'cider-inspect-last-result
-    "e n" 'cider-enlighten-mode
-    "e p" 'cider-pprint-eval-last-sexp ;; prints in repl
-    "e P" 'cider-eval-print-last-sexp ;; prints in buffer
-    "e r" 'cider-eval-defun-at-point
-    "e x" 'cider-interrupt
-    "]"   'sp-forward-barf-sexp
-    "["   'sp-backwards-barf-sexp
-    ">"   'sp-forward-slurp-sexp
-    "<"   'sp-backwards-slurp-sexp
-    "s c" 'clear-repl-buffer
-    "t t" 'cider-test-run-test
-    "t n" 'cider-test-run-ns-tests))
+(require 'key-chord)
+(key-chord-mode 1)
+(key-chord-define meow-insert-state-keymap "jk" [escape])
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Key bindings
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(global-set-key (kbd "C-c d") 'cider-debug-defun-at-point)
+(global-set-key (kbd "C-c g") 'magit-status)
+(global-set-key (kbd "C-c G") 'magit-blame-echo)
+(global-set-key (kbd "C-c i") 'edit-init-file)
+(global-set-key (kbd "C-c l") 'switch-to-previous-buffer)
+(global-set-key (kbd "C-o") 'other-window)
+
+(define-key smartparens-mode-map (kbd "C-<right>") 'sp-forward-slurp-sexp)
+(define-key smartparens-mode-map (kbd "C-<left>") 'sp-forward-barf-sexp)
+(define-key smartparens-mode-map (kbd "C-M-<left>") 'sp-backward-slurp-sexp)
+(define-key smartparens-mode-map (kbd "C-M-<right>") 'sp-backward-barf-sexp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Cleanup after load
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq gc-cons-threshold (* 2 1000 1000))
+
+;; Keybinding Cheatsheet
+
+;; Window
+;; C-x o - other window
+;; C-x 0 - close current window
+;; C-x 1 - one window
+;; C-x 2 - horizontal split
+;; C-x 3 - vertical split
+
+;; Movement
+;; C-f - forward
+;; C-b - back
+;; M-f - forward word
+;; M-b - back word
+;; C-n - next line
+;; C-p - previous-line
+;; C-a - beginning of line
+;; C-e - end of line
+;; M-a - beginning of sentence
+;; M-e - end of sentence
+;; C-v - scroll-down fast
+;; M-v - scroll-up fast
+;; C-x [ - beginning of file
+;; C-x ] - end of file
+;; M-h - move to beginning of current defun and mark to end
+
+;; Deleting
+;; C-k Kill from cursor to end of line
+;; M-k kill from cursor to end of sentence
+;; C-d kill char after cursor
+;; M-d kill word after cursor
+;; C-SPC to select text C-w to delete
+
+;; Copy/Paste
+;; C-k to kill (copy)
+;; C-y to yank (paste)
+
+;; Files
+;; C-x C-f - Find file
+;; C-x C-s - save file
+
+;; Buffers
+;; C-x C-bn - List buffers
+
+;; Search
+;; C-s - Search forward
+;; C-r - Search backward
+
+;; Comment
+;; M-;
+
+;; Shell
+;; M-! Quick shell commannd in minibuffer (prefix with C-u to insert output at point)
+
+;; Undo
+;; C-/
+
+;; Rectangle
+;; M-h to select rectangle
+;; M-w to add to kill ring
+;; C-x r d - delete
+
+;; Zap
+;; M-z CHAR
+
+;; CIDER
+;; C-c M-c - cider-connect-clj
+;; C-c C-k - cider-load-buffer
+;; C-c C-e - cider-eval-last-sexp
+;; C-c C-c - Cider-eval-defun-to-point
+;; C-c C-p - cider-eval-pprint-last-sexp
+;; C-c C-d d - cider-doc
+;; C-c C-d j - cider-javadoc
+;; C-c C-d c - cider-clojuredoc
+;; C-c C-z - cider-switch-to-repl-buffer
+;; C-c C-b - cider interrupt
+;; C-u C-M-x - instrument debugger
+;; M-. - Jump to definition
+;; M-, - pop back
+
+;; C-c C-t n - run ns tests
+;; C-c C-t p - run all loaded ns tests
+;; C-c C-t t - run test under point
