@@ -177,10 +177,14 @@
    '("/" . meow-keypad-describe-key)
    '("b" . ido-switch-buffer)
    '("f" . ag-project)
+   '("g" . magit-status)
+   '("G" . magit-blame-echo)
    '("l" . switch-to-previous-buffer)
    '("o" . other-window)
    '("z" . fzf-find-file)
    '(";" . comment-line)
+   '(">" . sp-forward-slurp-sexp)
+   '("<" . sp-forward-barf-sexp)
    '("?" . meow-cheatsheet))
   (meow-normal-define-key
    '("0" . meow-expand-0)
@@ -249,16 +253,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (global-set-key (kbd "C-c d") 'cider-debug-defun-at-point)
-(global-set-key (kbd "C-c g") 'magit-status)
-(global-set-key (kbd "C-c G") 'magit-blame-echo)
 (global-set-key (kbd "C-c i") 'edit-init-file)
-(global-set-key (kbd "C-c l") 'switch-to-previous-buffer)
-(global-set-key (kbd "C-o") 'other-window)
-
-(define-key smartparens-mode-map (kbd "C-<right>") 'sp-forward-slurp-sexp)
-(define-key smartparens-mode-map (kbd "C-<left>") 'sp-forward-barf-sexp)
-(define-key smartparens-mode-map (kbd "C-M-<left>") 'sp-backward-slurp-sexp)
-(define-key smartparens-mode-map (kbd "C-M-<right>") 'sp-backward-barf-sexp)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Cleanup after load
@@ -266,7 +261,7 @@
 
 (setq gc-cons-threshold (* 2 1000 1000))
 
-;; Keybinding Cheatsheet
+;; Vanilla Emacs Keybinding Cheatsheet
 
 ;; Window
 ;; C-x o - other window
